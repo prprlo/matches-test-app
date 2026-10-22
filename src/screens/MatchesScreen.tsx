@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import {ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { MATCHES_URL } from '../config';
 
@@ -13,23 +13,34 @@ const statusLabels: Record<string, string> = {
 // Экран «Матчи тура» — задание в README.md, часть 1.
 export function MatchesScreen() {
   const [matches, setMatches] = useState<typeof import('../../data/matches.json')['matches']>([]);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function loadMatches() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(MATCHES_URL);
+
+      if (!response.ok) {
+        throw new Error('Не удалось загрузить матчи');
+      }
+
+      const data = await response.json();
+      setMatches(data.matches);
+
+    } catch (error) {
+      setError('Не удалось загрузить матчи. Попробуйте ещё раз.');
+      console.error('Ошибка загрузки:', error);
+
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadMatches() {
-      try {
-        const response = await fetch(MATCHES_URL);
-
-        if (!response.ok) {
-          throw new Error('Не удалось загрузить матчи');
-        }
-
-        const data = await response.json();
-
-        setMatches(data.matches);
-      } catch (error) {
-        console.error('Ошибка загрузки:', error);
-      }
-    }
     loadMatches();
   }, []);
 
@@ -37,7 +48,36 @@ export function MatchesScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Матчи тура</Text>
 
-      {matches.map(match => (
+      {loading && (
+        <View>
+          <ActivityIndicator size="large" />
+          <Text>Загрузка матчей...</Text>
+        </View>
+      )}
+
+      {!loading && error && (
+        <View>
+          <Text>
+            {error}
+          </Text>
+
+          <Pressable onPress={loadMatches}>
+            <Text>
+              Повторить
+            </Text>
+          </Pressable>
+        </View>
+      )}
+
+      {!loading && !error && matches.length === 0 && (
+          <Text>
+            Матчей пока нет
+          </Text>
+
+      )}
+
+
+      {!loading && !error && matches.map(match => (
         <View key={match.id} style={styles.card}>
           <Text style={styles.teams}>
             {match.home.name} - {match.away.name}
