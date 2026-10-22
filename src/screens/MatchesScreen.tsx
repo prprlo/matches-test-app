@@ -17,6 +17,8 @@ export function MatchesScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [filter, setFilter] = useState('all');
+
   async function loadMatches() {
     setLoading(true);
     setError(null);
@@ -44,9 +46,35 @@ export function MatchesScreen() {
     loadMatches();
   }, []);
 
+  const filteredMatches = matches.filter(match => {
+    if (filter === 'upcoming') {
+      return match.status === 'scheduled' || match.status === 'postponed';
+    }
+
+    if (filter === 'finished') {
+      return match.status === 'finished';
+    }
+
+    return true;
+  });
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Матчи тура</Text>
+
+      <View style={styles.filters}>
+        <Pressable onPress={() => setFilter('all')}>
+          <Text>Все</Text>
+        </Pressable>
+
+        <Pressable onPress={() => setFilter('upcoming')}>
+          <Text>Предстоящие</Text>
+        </Pressable>
+
+        <Pressable onPress={() => setFilter('finished')}>
+          <Text>Завершённые</Text>
+        </Pressable>
+      </View>
 
       {loading && (
         <View>
@@ -77,7 +105,7 @@ export function MatchesScreen() {
       )}
 
 
-      {!loading && !error && matches.map(match => (
+      {!loading && !error && filteredMatches.map(match => (
         <View key={match.id} style={styles.card}>
           <Text style={styles.teams}>
             {match.home.name} - {match.away.name}
@@ -125,5 +153,11 @@ const styles = StyleSheet.create({
   teams: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  filters: {
+    flexDirection: 'row',
+    gap: 16,
+    marginVertical: 16,
+    flexWrap: 'wrap',
   },
 });
