@@ -2,6 +2,8 @@ import {ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nativ
 import { useEffect, useState } from 'react';
 import { MATCHES_URL } from '../config';
 import { UpdatedAgo } from '../components/UpdatedAgo';
+import { useFavorites } from '../hooks/useFavorites';
+import { FavoriteButton } from '../components/FavoriteButton';
 
 const statusLabels: Record<string, string> = {
   finished: 'Завершён',
@@ -21,6 +23,7 @@ export function MatchesScreen() {
   const [filter, setFilter] = useState('all');
   
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { isFavorite, toggle } = useFavorites();
 
   async function loadMatches() {
     setLoading(true);
@@ -120,6 +123,11 @@ export function MatchesScreen() {
           <Text style={styles.teams}>
             {match.home.name} - {match.away.name}
           </Text>
+
+          <FavoriteButton
+            active={isFavorite(match.id)}
+            onPress={() => toggle(match.id)}
+          />
 
           <Text>
             {match.score !== null
