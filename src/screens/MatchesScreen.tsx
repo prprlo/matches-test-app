@@ -1,6 +1,7 @@
 import {ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { MATCHES_URL } from '../config';
+import { UpdatedAgo } from '../components/UpdatedAgo';
 
 const statusLabels: Record<string, string> = {
   finished: 'Завершён',
@@ -18,6 +19,8 @@ export function MatchesScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const [filter, setFilter] = useState('all');
+  
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   async function loadMatches() {
     setLoading(true);
@@ -32,6 +35,7 @@ export function MatchesScreen() {
 
       const data = await response.json();
       setMatches(data.matches);
+      setLastUpdated(new Date());
 
     } catch (error) {
       setError('Не удалось загрузить матчи. Попробуйте ещё раз.');
@@ -61,6 +65,12 @@ export function MatchesScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Матчи тура</Text>
+      <Pressable onPress={loadMatches} disabled={loading}>
+        <Text>Обновить</Text>
+      </Pressable>
+      {lastUpdated !== null && (
+        <UpdatedAgo since={lastUpdated} />
+      )}
 
       <View style={styles.filters}>
         <Pressable onPress={() => setFilter('all')}>
